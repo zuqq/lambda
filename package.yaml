@@ -1,0 +1,27 @@
+name:                lambda
+version:             0.1.0.0
+github:              "zuqq/lambda"
+license:             BSD3
+author:              "zuqq <noahheld17@gmail.com>"
+
+extra-source-files:
+- README.md
+
+description:         Please see the README on GitHub at <https://github.com/zuqq/lambda#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+
+tests:
+  lambda-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - lambda
