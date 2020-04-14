@@ -1,15 +1,8 @@
 module Lambda.Untyped (beta, free, shift, sub, Term (..)) where
 
-import qualified Data.IntSet as IS
-
 
 data Term = Var Int | Abs Term | App Term Term
     deriving (Eq, Read, Show)
-
-free :: Term -> IS.IntSet
-free (Var n)    = IS.singleton n
-free (Abs t)    = IS.filter (>= 0) . IS.map (+ (-1)) $ free t
-free (App t t') = IS.union (free t) (free t')
 
 -- | Applying @shift i c@ to a term @t@ shifts the free variables of @t@ that
 -- are greater than or equal to @c@ by @i@.
@@ -21,7 +14,7 @@ shift
 shift i c (Var n)
     | n >= c         = Var (n + i)
     | otherwise      = Var n
-shift i c (Abs e)    = Abs (shift i (c + 1) e)
+shift i c (Abs t)    = Abs (shift i (c + 1) t)
 shift i c (App t t') = App (shift i c t) (shift i c t')
 
 -- | Applying @sub t m@ to a term @t'@ replaces all occurences of @m@ among the
