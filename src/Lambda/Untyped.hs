@@ -1,4 +1,4 @@
-module Untyped (beta, free, shift, sub, Term (..)) where
+module Lambda.Untyped (beta, free, shift, sub, Term (..)) where
 
 import qualified Data.IntSet as IS
 
