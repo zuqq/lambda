@@ -75,9 +75,7 @@ record constr = modify $ \s -> s { acc = constr : acc s }
 -- typed by the context get freshed type variables, keeping their types as
 -- general as possible.
 gather :: Context -> Term -> Gather Type
-gather c (Var n) = case find n c of
-    Just a  -> return a
-    Nothing -> freshTVar
+gather c (Var n) = maybe freshTVar return (find n c)
 gather c (Abs t) = do
     x <- freshTVar
     b <- gather (under x c) t
@@ -138,10 +136,10 @@ unify ((CEq a b) : rest)
     | a == b    = unify rest
     | otherwise = case (a, b) of
         (TVar m, b)
-            | m `IS.member` (tVars b) -> Left $ RecException a b
-            | otherwise              -> do
+            | m `IS.member` tVars b -> Left $ RecException a b
+            | otherwise             -> do
                 let s = IM.singleton m b
                 s' <- unify (map (applyBoth s) rest)
                 return $ s' `after` s
-        (a, TVar n)                  -> unify $ (CEq b a) : rest
-        (TArr a a', TArr b b')       -> unify $ (CEq a b) : (CEq a' b') : rest
+        (a, TVar n)                 -> unify $ CEq b a : rest
+        (TArr a a', TArr b b')      -> unify $ CEq a b : CEq a' b' : rest
