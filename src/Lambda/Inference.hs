@@ -1,8 +1,4 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Lambda.Typed where
-
-import Prelude hiding (lookup)
 
 import Control.Monad.Trans.State.Strict (gets, modify, runState, State)
 import qualified Data.IntMap.Strict     as IM
@@ -31,10 +27,10 @@ data Context = Context
     { depth :: Int             -- ^ Distance from the outermost scope.
     , table :: IM.IntMap Type  -- ^ Finite mapping from variables to types.
     }
-    deriving (Eq, Show, Read)
+    deriving (Eq, Read, Show)
 
-lookup :: Int -> Context -> Maybe Type
-lookup n Context {..} = IM.lookup (n - depth) table
+find :: Int -> Context -> Maybe Type
+find n c = IM.lookup (n - depth c) (table c)
 
 -- | Find the smallest non-negative type variable index that is not mentioned
 -- in the given context.
@@ -51,9 +47,9 @@ under
     :: Type     -- ^ Type for the bound variable under the lambda.
     -> Context  -- ^ Context for the abstraction.
     -> Context  -- ^ Context for the body of the abstraction.
-under t Context {..} = Context
-    { depth = depth + 1
-    , table = IM.insert (-(depth + 1)) t table
+under a c = Context
+    { depth = depth c + 1
+    , table = IM.insert (-(depth c + 1)) a (table c)
     }
 
 -- Gathering constraints
@@ -71,8 +67,11 @@ data GatherState = GatherState
 type Gather a = State GatherState a
 
 -- | Increment the fresh type variable index.
-incrIndex :: Gather ()
-incrIndex = modify $ \s -> s { index = index s + 1 }
+freshTVar :: Gather Type
+freshTVar = do
+    i <- gets index
+    modify $ \s -> s { index = i + 1 }
+    return $ TVar i
 
 -- | Record the constraint.
 record :: Constr -> Gather ()
@@ -95,35 +94,24 @@ record constr = modify $ \s -> s { acc = constr : acc s }
 --     from both terms. Let x be a fresh type variable. Record the constraint
 --     (infered type of t) = (infered type of t') -> x and return x.
 gather :: Context -> Term -> Gather Type
-gather c (Var n) = do
-    case lookup n c of
-        Just a  -> return a
-        Nothing -> do
-            i <- gets index
-            incrIndex
-            return (TVar i)
+gather c (Var n) = case find n c of
+    Just a  -> return a
+    Nothing -> freshTVar
 gather c (Abs t) = do
-    i <- gets index
-    incrIndex
-    let x = TVar i
+    x <- freshTVar
     b <- gather (under x c) t
-    return $ TArr (TVar i) b
+    return $ TArr x b
 gather c (App t t') = do
     a  <- gather c t
     a' <- gather c t'
-    i  <- gets index
-    incrIndex
-    let x = TVar i
+    x  <- freshTVar
     record $ CEq a (TArr a' x)
     return x
 
 runGather :: Context -> Term -> (Type, [Constr])
 runGather c t = (a, acc s')
   where
-    i = case IM.lookupMax (table c) of
-        Nothing     -> 0
-        Just (n, _) -> n + 1
-    (a, s') = runState (gather c t) (GatherState i [])
+    (a, s') = runState (gather c t) (GatherState (freshIndex c) [])
 
 -- Substitutions
 
@@ -170,5 +158,5 @@ unify ((CEq a b) : rest)
                 let s = IM.singleton m b
                 s' <- unify (map (applyBoth s) rest)
                 return $ s' `after` s
-        (a, TVar n)                  -> unify ((CEq b a) : rest)
-        (TArr a a', TArr b b')       -> unify ((CEq a b) : (CEq a' b') : rest)
+        (a, TVar n)                  -> unify $ (CEq b a) : rest
+        (TArr a a', TArr b b')       -> unify $ (CEq a b) : (CEq a' b') : rest
