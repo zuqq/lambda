@@ -1,4 +1,4 @@
-module Lambda.Typed where
+module Lambda.Inference where
 
 import Control.Monad.Trans.State.Strict (gets, modify, runState, State)
 import qualified Data.IntMap.Strict     as IM
@@ -16,9 +16,10 @@ data Term = Var Int | Abs Term | App Term Term
 data Type = TVar Int | TArr Type Type
     deriving (Eq, Read, Show)
 
-free :: Type -> IS.IntSet
-free (TVar n)   = IS.singleton n
-free (TArr a b) = IS.union (free a) (free b)
+-- | Find the type variables appearing in a type.
+tVars :: Type -> IS.IntSet
+tVars (TVar n)   = IS.singleton n
+tVars (TArr a b) = IS.union (tVars a) (tVars b)
 
 -- Typing context
 
@@ -32,15 +33,9 @@ data Context = Context
 find :: Int -> Context -> Maybe Type
 find n c = IM.lookup (n - depth c) (table c)
 
--- | Find the smallest non-negative type variable index that is not mentioned
--- in the given context.
-freshIndex :: Context -> Int
-freshIndex c = max maxKey maxFree + 1
-  where
-    maxKey = case IM.lookupMax (table c) of
-        Nothing     -> -1
-        Just (n, _) -> n
-    maxFree = foldr (max . IS.findMax . free) (-1) (table c)
+-- | Find the largest type variable index that is mentioned in a context.
+maxTVar :: Context -> Int
+maxTVar c = foldr (max . IS.findMax . tVars) 0 (table c)
 
 -- | Adjust the context when going under an abstraction.
 under
@@ -54,7 +49,6 @@ under a c = Context
 
 -- Gathering constraints
 
--- | Type equality constraint.
 data Constr = CEq Type Type
     deriving (Eq, Read, Show)
 
@@ -66,33 +60,20 @@ data GatherState = GatherState
 
 type Gather a = State GatherState a
 
--- | Increment the fresh type variable index.
+-- | Get a fresh type variable.
 freshTVar :: Gather Type
 freshTVar = do
     i <- gets index
     modify $ \s -> s { index = i + 1 }
     return $ TVar i
 
--- | Record the constraint.
+-- | Record a constraint.
 record :: Constr -> Gather ()
 record constr = modify $ \s -> s { acc = constr : acc s }
 
--- | Gather the type constraints for the given term.
---
--- The inference rules are roughly as follows:
---
---     * If the term is a variable, we look it up in the context; if it's not in
---     the context, return a fresh type variable.
---
---     * If the term is an abstraction @Abs t@, we recurse on @t@. Because we
---     are using De Bruijn indices, the context { v_i : T_i } for @Abs t@
---     translates to the context { v_0 : x, x_{i + 1} : T_i } for @t@, where v_0
---     is the bound variable and x is a fresh type variable. Return
---     x -> (infered type of body).
---
---     * If the term is an application @App t t'@, first gather constraints
---     from both terms. Let x be a fresh type variable. Record the constraint
---     (infered type of t) = (infered type of t') -> x and return x.
+-- | Gather the type constraints for the given term. Variables that are not
+-- typed by the context get freshed type variables, keeping their types as
+-- general as possible.
 gather :: Context -> Term -> Gather Type
 gather c (Var n) = case find n c of
     Just a  -> return a
@@ -111,16 +92,18 @@ gather c (App t t') = do
 runGather :: Context -> Term -> (Type, [Constr])
 runGather c t = (a, acc s')
   where
-    (a, s') = runState (gather c t) (GatherState (freshIndex c) [])
+    (a, s') = runState (gather c t) (GatherState (maxTVar c + 1) [])
 
 -- Substitutions
 
 type Sub = IM.IntMap Type
 
+-- | Apply a substitution to a type.
 apply :: Sub -> Type -> Type
 apply s (TVar n)   = IM.findWithDefault (TVar n) n s
 apply s (TArr a b) = TArr (apply s a) (apply s b)
 
+-- | Apply a substitution to both sides of a constraint.
 applyBoth :: Sub -> Constr -> Constr
 applyBoth s (CEq a b) = CEq (apply s a) (apply s b)
 
@@ -143,17 +126,19 @@ after s' s = IM.union (IM.map (apply s') s) s'
 
 -- Solving constraints
 
--- | Try to find a substitution that solves the given constraints. The only
--- way for this to fail is if it encounters a type constraint x = a for a
+-- | Failure mode for constraint unification.
+data RecException = RecException Type Type
+
+-- | Try to find a substitution that solves the given constraints. The only way
+-- for this to fail is if it encounters a constraint of the form x = a for a
 -- type variable x and type a with x free in a.
-unify :: [Constr] -> Either String Sub
+unify :: [Constr] -> Either RecException Sub
 unify []        = Right IM.empty
 unify ((CEq a b) : rest)
     | a == b    = unify rest
     | otherwise = case (a, b) of
         (TVar m, b)
-            | m `IS.member` (free b) -> Left $
-                "Recursive type constraint " <> show a <> " == " <> show b
+            | m `IS.member` (tVars b) -> Left $ RecException a b
             | otherwise              -> do
                 let s = IM.singleton m b
                 s' <- unify (map (applyBoth s) rest)
