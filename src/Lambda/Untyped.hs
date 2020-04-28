@@ -1,4 +1,7 @@
-module Lambda.Untyped (beta, free, shift, sub, Term (..)) where
+module Lambda.Untyped
+    ( Term (..)
+    , eval
+    ) where
 
 
 data Term = Var Int | Abs Term | App Term Term
@@ -33,7 +36,7 @@ sub t m (App t' t'') = App (sub t m t') (sub t m t'')
 beta :: Term -> Term -> Term
 beta t t' = shift (-1) 0 (sub (shift 1 0 t') 0 t)
 
--- | Evaluate a lambda term, using the operational semantics.
+-- | Evaluate a lambda term, using a call-by-value strategy.
 eval :: Term -> Term
 eval (App (Abs t) (Abs t')) = beta t (Abs t')        -- (E-AppAbs)
 eval (App (Abs t) t')       = App (Abs t) (eval t')  -- (E-App2)

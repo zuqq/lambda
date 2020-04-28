@@ -1,6 +1,11 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Lambda.Typed (Context, Term (..), Type (..), typeof) where
+module Lambda.Typed
+    ( Context
+	, Term (..)
+	, Type (..)
+	, typeof
+    ) where
 
 
 data Term = Var Int | Abs Type Term | App Term Term
