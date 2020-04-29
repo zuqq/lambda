@@ -1,4 +1,4 @@
-module Lambda.Untyped
+module Lambda.Term
     ( Term (..)
     , eval
     ) where
@@ -24,7 +24,7 @@ shift i c (App t t') = App (shift i c t) (shift i c t')
 -- free variables of @t'@ by @t@.
 sub
     :: Term  -- ^ Term to replace with
-    -> Int   -- ^ Variable to replace
+    -> Int   -- ^ Index of the variable to replace
     -> Term  -- ^ Object
     -> Term
 sub t m (Var n)
