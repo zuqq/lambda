@@ -36,10 +36,6 @@ tVars (TArr a b) = S.union (tVars a) (tVars b)
 -- | A typing context is a finite mapping from free variables to types.
 type Context = M.Map VIx Type
 
--- | Find the largest type variable index that is mentioned in a context.
-maxTVar :: Context -> TVIx
-maxTVar = foldr (max . S.findMax . tVars) 0
-
 -- | Adjust the context when going under an abstraction.
 bind
     :: Type     -- ^ Type for the bound variable of the abstraction
@@ -91,7 +87,8 @@ gather c (App t t') = do
 runGather :: Context -> Term -> (Type, [Constr])
 runGather c t = (a, acc s')
   where
-    (a, s') = runState (gather c t) (GatherState (maxTVar c + 1) [])
+    maxTVar = foldr (max . S.findMax . tVars) 0 c
+    (a, s') = runState (gather c t) (GatherState (maxTVar + 1) [])
 
 -- Substitutions
 
