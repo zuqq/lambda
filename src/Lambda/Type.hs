@@ -1,22 +1,34 @@
 module Lambda.Type where
 
+import qualified Text.PrettyPrint as PP
+
 import qualified Data.Map.Strict as M
 import qualified Data.Set        as S
 
-
--- Types
 
 -- | A type is either a type variable or a function type. There is an infinite
 -- number of type variables, indexed by the natural numbers.
 data Type = TVar Int | TArr Type Type
     deriving (Eq, Read, Show)
 
+ppT
+    :: Int     -- ^ Depth
+    -> Type
+    -> PP.Doc
+ppT d (TVar n)    = PP.text $ "a" <> show n
+ppT d (TArr a a') = parens d . PP.hsep $
+    [ ppT (d + 1) a
+    , PP.text "->"
+    , ppT (d + 1) a'
+    ]
+  where
+    parens 0 = id
+    parens _ = PP.parens
+
 -- | Map a type to the set of its type variables.
 free :: Type -> S.Set Int
 free (TVar n)   = S.singleton n
 free (TArr a b) = S.union (free a) (free b)
-
--- Typing context
 
 -- | A typing context is a finite mapping from free variables to types.
 type Context = M.Map Int Type
@@ -27,8 +39,6 @@ bind
     -> Context  -- ^ Context for the abstraction.
     -> Context  -- ^ Context for the body of the abstraction.
 bind a = M.insert 0 a . M.mapKeys (+ 1)
-
--- Substitutions
 
 -- | A substitution is a finite mapping from type variable indices to types.
 type Sub = M.Map Int Type

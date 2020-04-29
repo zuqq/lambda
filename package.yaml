@@ -12,6 +12,7 @@ description:         Please see the README on GitHub at <https://github.com/zuqq
 dependencies:
 - base >= 4.7 && < 5
 - containers
+- pretty
 - transformers
 
 library:

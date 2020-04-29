@@ -1,14 +1,13 @@
-module Lambda.Inference where
+module Lambda.Infer where
 
 import Control.Monad.Trans.State.Strict (gets, modify, runState, State)
 import qualified Data.Map.Strict        as M
 import qualified Data.Set               as S
 
+import Lambda.Node
 import Lambda.Term
 import Lambda.Type
 
-
--- Gathering constraints
 
 -- | A constraint is an equality between two types.
 type Constr = (Type, Type)
@@ -18,48 +17,48 @@ transform :: Sub -> Constr -> Constr
 transform s (a, b) = (apply s a, apply s b)
 
 data GatherState = GatherState
-    { index :: Int       -- ^ Fresh type variable index.
-    , acc   :: [Constr]  -- ^ List of collected constraints.
+    { ix  :: Int       -- ^ Fresh type variable index.
+    , acc :: [Constr]  -- ^ List of collected constraints.
     }
     deriving (Eq, Read, Show)
 
 type Gather a = State GatherState a
 
 -- | Get a fresh type variable.
-freshTV :: Gather Type
-freshTV = do
-    i <- gets index
-    modify $ \s -> s { index = i + 1 }
+fresh :: Gather Type
+fresh = do
+    i <- gets ix
+    modify $ \s -> s { ix = i + 1 }
     return $ TVar i
 
 -- | Record a constraint.
 record :: Constr -> Gather ()
-record constr = modify $ \s -> s { acc = constr : acc s }
+record c = modify $ \s -> s { acc = c : acc s }
 
 -- | Gather the type constraints for the given term. Variables that are not
 -- typed by the context get fresh type variables, keeping their types as
 -- general as possible.
-gather :: Context -> Term -> Gather Type
-gather c (Var n) = maybe freshTV return (M.lookup n c)
-gather c (Abs t) = do
-    x <- freshTV
-    b <- gather (bind x c) t
-    return $ TArr x b
-gather c (App t t') = do
-    a  <- gather c t
-    a' <- gather c t'
-    x  <- freshTV
-    record (a, TArr a' x)
-    return x
+gather :: Context -> Term -> Gather Node
+gather g (Var n) = case M.lookup n g of
+    Nothing -> NVar n <$> fresh
+    Just a  -> return $ NVar n a
+gather g (Abs t) = do
+    x <- fresh
+    b <- gather (bind x g) t
+    return $ NAbs b (TArr x (typeof b))
+gather g (App t t') = do
+    a  <- gather g t
+    a' <- gather g t'
+    x  <- fresh
+    record (typeof a, TArr (typeof a') x)
+    return $ NApp a a' x
 
-runGather :: Context -> Term -> (Type, [Constr])
-runGather c t = (a, acc s')
+runGather :: Context -> Term -> (Node, [Constr])
+runGather g t = (a, acc s')
   where
-    allTVar = foldr (S.union . free) S.empty c
+    allTVar = foldr (S.union . free) S.empty g
     newTVar = if S.null allTVar then 0 else S.findMax allTVar + 1
-    (a, s') = runState (gather c t) (GatherState newTVar [])
-
--- Solving constraints
+    (a, s') = runState (gather g t) (GatherState newTVar [])
 
 -- | Try to find a substitution that solves the given constraints.
 unify :: [Constr] -> Maybe Sub
@@ -73,3 +72,14 @@ unify ((a, b) : rest) = if a == b
                 in (`after` s) <$> unify (map (transform s) rest)
         (a, TVar n)               -> unify $ (b, a) : rest
         (TArr a a', TArr b b')    -> unify $ (a, b) : (a', b') : rest
+
+-- | Try to infer the type of the given term.
+--
+-- The return value is the typed AST, with the subsitution returned by 'unify'
+-- already applied.
+infer :: Context -> Term -> Maybe Node
+infer g t = do
+    s <- unify cs
+    return $ sub s n
+  where
+    (n, cs) = runGather g t
