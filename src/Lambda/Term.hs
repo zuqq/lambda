@@ -1,7 +1,4 @@
-module Lambda.Term
-    ( Term (..)
-    , eval
-    ) where
+module Lambda.Term where
 
 
 data Term = Var Int | Abs Term | App Term Term
