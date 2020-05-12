@@ -1,7 +1,8 @@
 module Lambda.Node where
 
-import qualified Text.PrettyPrint as PP
+import qualified Text.PrettyPrint.HughesPJ as PP
 
+import Lambda.Pretty
 import Lambda.Type
 
 
@@ -12,25 +13,21 @@ data Node
     | NApp Node Node Type
     deriving (Eq, Read, Show)
 
--- | Pretty-printing for 'Node's.
-ppN :: Int -> Node -> PP.Doc
-ppN d (NVar n a)    = PP.parens . PP.hsep $
-    [ PP.text ("v" <> show n)
-    , PP.char ':'
-    , ppT 0 a
-    ]
-ppN d (NAbs b t)    = parens d . PP.hsep $
-    [ PP.text "\\v0"
-    , PP.text "->"
-    , ppN 0 b
-    ]
-  where
-    parens 0 = id
-    parens _ = PP.parens
-ppN d (NApp a a' t) = PP.hsep
-    [ ppN 1 a
-    , ppN 1 a'
-    ]
+instance Pretty Node where
+    ppr d (NVar n a)    = PP.parens . PP.hsep $
+        [ PP.text ("v" <> show n)
+        , PP.char ':'
+        , ppr 0 a
+        ]
+    ppr d (NAbs b t)    = PP.maybeParens (d > 0) . PP.hsep $
+        [ PP.text "\\v0"
+        , PP.text "->"
+        , ppr 0 b
+        ]
+    ppr d (NApp a a' t) = PP.hsep
+        [ ppr 1 a
+        , ppr 1 a'
+        ]
 
 -- | Extract the type of a 'Node'.
 typeof :: Node -> Type

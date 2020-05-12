@@ -1,9 +1,11 @@
 module Lambda.Type where
 
-import qualified Text.PrettyPrint as PP
+import qualified Text.PrettyPrint.HughesPJ as PP
 
 import qualified Data.Map.Strict as M
 import qualified Data.Set        as S
+
+import Lambda.Pretty
 
 
 -- | A type is either a type variable or a function type. There is an infinite
@@ -11,19 +13,13 @@ import qualified Data.Set        as S
 data Type = TVar Int | TArr Type Type
     deriving (Eq, Read, Show)
 
-ppT
-    :: Int     -- ^ Depth
-    -> Type
-    -> PP.Doc
-ppT d (TVar n)    = PP.text $ "a" <> show n
-ppT d (TArr a a') = parens d . PP.hsep $
-    [ ppT (d + 1) a
-    , PP.text "->"
-    , ppT (d + 1) a'
-    ]
-  where
-    parens 0 = id
-    parens _ = PP.parens
+instance Pretty Type where
+    ppr d (TVar n)    = PP.text $ "a" <> show n
+    ppr d (TArr a a') = PP.maybeParens (d > 0) . PP.hsep $
+        [ ppr (d + 1) a
+        , PP.text "->"
+        , ppr (d + 1) a'
+        ]
 
 -- | Map a type to the set of its type variables.
 free :: Type -> S.Set Int
