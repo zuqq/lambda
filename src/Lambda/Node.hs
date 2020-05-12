@@ -31,9 +31,9 @@ instance Pretty Node where
 
 -- | Extract the type of a 'Node'.
 typeof :: Node -> Type
-typeof (NVar _ t)    = t
-typeof (NAbs _ t)    = t
-typeof (NApp _ _ t ) = t
+typeof (NVar _ t)   = t
+typeof (NAbs _ t)   = t
+typeof (NApp _ _ t) = t
 
 -- | Apply a substitution to a typed AST.
 sub :: Sub -> Node -> Node
