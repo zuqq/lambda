@@ -14,7 +14,7 @@ data Type = TVar Int | TArr Type Type
     deriving (Eq, Read, Show)
 
 instance Pretty Type where
-    ppr d (TVar n)    = PP.text $ "a" <> show n
+    ppr _ (TVar n)    = PP.text $ "a" <> show n
     ppr d (TArr a a') = PP.maybeParens (d > 0) . PP.hsep $
         [ ppr (d + 1) a
         , PP.text "->"

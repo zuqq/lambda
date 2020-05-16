@@ -14,17 +14,17 @@ data Node
     deriving (Eq, Read, Show)
 
 instance Pretty Node where
-    ppr d (NVar n a)    = PP.parens . PP.hsep $
+    ppr _ (NVar n a)    = PP.parens . PP.hsep $
         [ PP.text ("v" <> show n)
         , PP.char ':'
         , ppr 0 a
         ]
-    ppr d (NAbs b t)    = PP.maybeParens (d > 0) . PP.hsep $
+    ppr d (NAbs b _)    = PP.maybeParens (d > 0) . PP.hsep $
         [ PP.text "\\v0"
         , PP.text "->"
         , ppr 0 b
         ]
-    ppr d (NApp a a' t) = PP.hsep
+    ppr _ (NApp a a' _) = PP.hsep
         [ ppr 1 a
         , ppr 1 a'
         ]

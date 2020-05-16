@@ -28,12 +28,12 @@ type Gather a = State GatherState a
 fresh :: Gather Type
 fresh = do
     i <- gets ix
-    modify $ \s -> s { ix = i + 1 }
+    modify $ \s -> s {ix = i + 1}
     return $ TVar i
 
 -- | Record a constraint.
 record :: Constr -> Gather ()
-record c = modify $ \s -> s { acc = c : acc s }
+record c = modify $ \s -> s {acc = c : acc s}
 
 -- | Gather the type constraints for the given term. Variables that are not
 -- typed by the context get fresh type variables, keeping their types as
@@ -66,12 +66,12 @@ unify []              = Just M.empty
 unify ((a, b) : rest) = if a == b
     then unify rest
     else case (a, b) of
-        (TVar m, b)
+        (TVar m, _)
             | m `S.member` free b -> Nothing
             | otherwise           -> let s = M.singleton m b
                 in (`after` s) <$> unify (map (transform s) rest)
-        (a, TVar n)               -> unify $ (b, a) : rest
-        (TArr a a', TArr b b')    -> unify $ (a, b) : (a', b') : rest
+        (_, TVar _)               -> unify $ (b, a) : rest
+        (TArr c c', TArr d d')    -> unify $ (c, d) : (c', d') : rest
 
 -- | Try to infer the type of the given term.
 --
