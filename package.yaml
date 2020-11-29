@@ -1,7 +1,7 @@
-name:    lambda
+name: lambda
 version: 0.1.0.0
-github:  "zuqq/lambda"
-author:  "zuqq <noahheld17@gmail.com>"
+github: "zuqq/lambda"
+author: "zuqq"
 
 extra-source-files:
 - README.md
