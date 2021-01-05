@@ -5,7 +5,6 @@ module Lambda.Pretty
 
 import qualified Text.PrettyPrint.HughesPJ as PP
 
-
 class Pretty a where
     ppr :: Int -> a -> PP.Doc
 

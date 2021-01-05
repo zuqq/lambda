@@ -7,7 +7,6 @@ import qualified Data.Set        as S
 
 import Lambda.Pretty
 
-
 -- | A type is either a type variable or a function type. There is an infinite
 -- number of type variables, indexed by the natural numbers.
 data Type = TVar Int | TArr Type Type

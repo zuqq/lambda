@@ -8,7 +8,6 @@ import Lambda.Node
 import Lambda.Term
 import Lambda.Type
 
-
 -- | A constraint is an equality between two types.
 type Constr = (Type, Type)
 

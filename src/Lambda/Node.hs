@@ -5,7 +5,6 @@ import qualified Text.PrettyPrint.HughesPJ as PP
 import Lambda.Pretty
 import Lambda.Type
 
-
 -- | Nodes of the typed AST.
 data Node
     = NVar Int Type
