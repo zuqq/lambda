@@ -28,7 +28,7 @@ fresh :: Gather Type
 fresh = do
     i <- gets ix
     modify $ \s -> s {ix = i + 1}
-    return $ TVar i
+    pure $ TVar i
 
 -- | Record a constraint.
 record :: Constr -> Gather ()
@@ -40,17 +40,17 @@ record c = modify $ \s -> s {acc = c : acc s}
 gather :: Context -> Term -> Gather Node
 gather g (Var n) = case M.lookup n g of
     Nothing -> NVar n <$> fresh
-    Just a  -> return $ NVar n a
+    Just a  -> pure $ NVar n a
 gather g (Abs t) = do
     x <- fresh
     b <- gather (bind x g) t
-    return $ NAbs b (TArr x (typeof b))
+    pure $ NAbs b (TArr x (typeof b))
 gather g (App t t') = do
     a  <- gather g t
     a' <- gather g t'
     x  <- fresh
     record (typeof a, TArr (typeof a') x)
-    return $ NApp a a' x
+    pure $ NApp a a' x
 
 runGather :: Context -> Term -> (Node, [Constr])
 runGather g t = (a, acc s')
@@ -79,6 +79,6 @@ unify ((a, b) : rest) = if a == b
 infer :: Context -> Term -> Maybe Node
 infer g t = do
     s <- unify cs
-    return $ sub s n
+    pure $ sub s n
   where
     (n, cs) = runGather g t
