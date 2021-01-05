@@ -1,6 +1,7 @@
 module Lambda.Pretty
     ( Pretty (..)
-    ) where
+    )
+    where
 
 import qualified Text.PrettyPrint.HughesPJ as PP
 
