@@ -9,7 +9,7 @@ import Lambda.Pretty
 
 -- | A type is either a type variable or a function type. There is an infinite
 -- number of type variables, indexed by the natural numbers.
-data Type = TVar Int | TArr Type Type
+data Type = TVar Int | TArr Type Type
     deriving (Eq, Read, Show)
 
 instance Pretty Type where
@@ -28,7 +28,7 @@ free (TArr a b) = S.union (free a) (free b)
 -- | A typing context is a finite mapping from free variables to types.
 type Context = M.Map Int Type
 
--- | Adjust the context when going under an abstraction.
+-- | Adjust the context when going under an abstraction.
 bind
     :: Type     -- ^ Type for the bound variable of the abstraction
     -> Context  -- ^ Context for the abstraction.

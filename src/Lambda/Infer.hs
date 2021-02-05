@@ -59,7 +59,7 @@ runGather g t = (a, acc s')
     newTVar = if S.null allTVar then 0 else S.findMax allTVar + 1
     (a, s') = runState (gather g t) (GatherState newTVar [])
 
--- | Try to find a substitution that solves the given constraints.
+-- | Try to find a substitution that solves the given constraints.
 unify :: [Constr] -> Maybe Sub
 unify []              = Just M.empty
 unify ((a, b) : rest) = if a == b
@@ -72,7 +72,7 @@ unify ((a, b) : rest) = if a == b
         (_, TVar _)               -> unify $ (b, a) : rest
         (TArr c c', TArr d d')    -> unify $ (c, d) : (c', d') : rest
 
--- | Try to infer the type of the given term.
+-- | Try to infer the type of the given term.
 --
 -- The return value is the typed AST, with the subsitution returned by 'unify'
 -- already applied.

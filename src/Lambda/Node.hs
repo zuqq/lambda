@@ -8,7 +8,7 @@ import Lambda.Type
 -- | Nodes of the typed AST.
 data Node
     = NVar Int Type
-    | NAbs Node Type
+    | NAbs Node Type
     | NApp Node Node Type
     deriving (Eq, Read, Show)
 
@@ -28,7 +28,7 @@ instance Pretty Node where
         , ppr 1 a'
         ]
 
--- | Extract the type of a 'Node'.
+-- | Extract the type of a 'Node'.
 typeof :: Node -> Type
 typeof (NVar _ t)   = t
 typeof (NAbs _ t)   = t
