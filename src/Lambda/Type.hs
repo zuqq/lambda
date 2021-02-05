@@ -8,8 +8,9 @@ import qualified Text.PrettyPrint.HughesPJ as PrettyPrint
 
 import Lambda.Pretty
 
--- | A type is either a type variable or a function type. There is an infinite
--- number of type variables, indexed by the natural numbers.
+-- | A type is either a type variable or a function type.
+--
+-- There is an infinite number of type variables, indexed by the integers.
 data Type = Var Int | Arr Type Type
     deriving (Eq, Read, Show)
 
@@ -44,10 +45,10 @@ apply :: Sub -> Type -> Type
 apply s (Var n)   = Map.findWithDefault (Var n) n s
 apply s (Arr a b) = Arr (apply s a) (apply s b)
 
--- | Compose two substitutions. The substitution @s' `after` s@ satisfies
--- @
--- apply (s' `after` s) a = s' `apply` (s `apply` a)
--- @
+-- | Compose two substitutions.
+--
+-- The substitution @s' `after` s@ satisfies
+-- > apply (s' `after` s) a = s' `apply` (s `apply` a)
 -- for every @a@.
 after :: Sub -> Sub -> Sub
 after s' s = Map.union (Map.map (apply s') s) s'

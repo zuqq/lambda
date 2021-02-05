@@ -46,9 +46,10 @@ fresh = do
 record :: Constraint -> Gather ()
 record c = modifying collected (c :)
 
--- | Gather the type constraints for the given term. Variables that are not
--- typed by the context get fresh type variables, keeping their types as
--- general as possible.
+-- | Gather the type constraints for the given term.
+--
+-- Variables that are not typed by the context get fresh type variables,
+-- keeping their types as general as possible.
 gather :: Context -> Untyped.Term -> Gather Typed.Term
 gather c (Untyped.Var n)    = case Map.lookup n c of
     Nothing -> fmap (Typed.Var n) fresh
@@ -87,7 +88,7 @@ unify ((a, b) : rest) = if a == b
 
 -- | Try to infer the type of the given term.
 --
--- The return value is the typed AST, with the subsitution returned by 'unify'
+-- The return value is a typed term, with the substitution returned by 'unify'
 -- already applied.
 infer :: Context -> Untyped.Term -> Maybe Typed.Term
 infer g t = do
