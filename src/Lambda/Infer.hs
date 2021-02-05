@@ -1,12 +1,17 @@
 module Lambda.Infer where
 
-import Control.Monad.Trans.State.Strict (gets, modify, runState, State)
-import qualified Data.Map.Strict        as M
-import qualified Data.Set               as S
+import Control.Monad.Trans.State (State)
+import Data.Map                  (Map)
+import Data.Set                  (Set)
+import qualified Data.Map                  as Map
+import qualified Data.Set                  as Set
+import qualified Control.Monad.Trans.State as State
 
-import Lambda.Node
-import Lambda.Term
 import Lambda.Type
+import Lambda.Typed
+import qualified Lambda.Type    as Type    (Type (..))
+import qualified Lambda.Typed   as Typed   (Term (..))
+import qualified Lambda.Untyped as Untyped (Term (..))
 
 -- | A constraint is an equality between two types.
 type Constr = (Type, Type)
@@ -26,57 +31,58 @@ type Gather a = State GatherState a
 -- | Get a fresh type variable.
 fresh :: Gather Type
 fresh = do
-    i <- gets ix
-    modify $ \s -> s {ix = i + 1}
-    pure $ TVar i
+    i <- State.gets ix
+    State.modify $ \s -> s {ix = i + 1}
+    pure $ Type.Var i
 
 -- | Record a constraint.
 record :: Constr -> Gather ()
-record c = modify $ \s -> s {acc = c : acc s}
+record c = State.modify $ \s -> s {acc = c : acc s}
 
 -- | Gather the type constraints for the given term. Variables that are not
 -- typed by the context get fresh type variables, keeping their types as
 -- general as possible.
-gather :: Context -> Term -> Gather Node
-gather g (Var n) = case M.lookup n g of
-    Nothing -> NVar n <$> fresh
-    Just a  -> pure $ NVar n a
-gather g (Abs t) = do
+gather :: Context -> Untyped.Term -> Gather Typed.Term
+gather g (Untyped.Var n) = case Map.lookup n g of
+    Nothing -> Typed.Var n <$> fresh
+    Just a  -> pure $ Typed.Var n a
+gather g (Untyped.Abs t) = do
     x <- fresh
     b <- gather (bind x g) t
-    pure $ NAbs b (TArr x (typeof b))
-gather g (App t t') = do
+    pure $ Typed.Abs b (Type.Arr x (typeof b))
+gather g (Untyped.App t t') = do
     a  <- gather g t
     a' <- gather g t'
     x  <- fresh
-    record (typeof a, TArr (typeof a') x)
-    pure $ NApp a a' x
+    record (typeof a, Type.Arr (typeof a') x)
+    pure $ Typed.App a a' x
 
-runGather :: Context -> Term -> (Node, [Constr])
+runGather :: Context -> Untyped.Term -> (Typed.Term, [Constr])
 runGather g t = (a, acc s')
   where
-    allTVar = foldr (S.union . free) S.empty g
-    newTVar = if S.null allTVar then 0 else S.findMax allTVar + 1
-    (a, s') = runState (gather g t) (GatherState newTVar [])
+    allTVar = foldr (Set.union . free) Set.empty g
+    newTVar = if Set.null allTVar then 0 else Set.findMax allTVar + 1
+    (a, s') = State.runState (gather g t) (GatherState newTVar [])
 
 -- | Try to find a substitution that solves the given constraints.
 unify :: [Constr] -> Maybe Sub
-unify []              = Just M.empty
+unify []              = Just Map.empty
 unify ((a, b) : rest) = if a == b
     then unify rest
     else case (a, b) of
-        (TVar m, _)
-            | m `S.member` free b -> Nothing
-            | otherwise           -> let s = M.singleton m b
+        (Type.Var m, _)
+            | m `Set.member` free b    -> Nothing
+            | otherwise                ->
+                let s = Map.singleton m b
                 in (`after` s) <$> unify (map (transform s) rest)
-        (_, TVar _)               -> unify $ (b, a) : rest
-        (TArr c c', TArr d d')    -> unify $ (c, d) : (c', d') : rest
+        (_, Type.Var _)                -> unify $ (b, a) : rest
+        (Type.Arr c c', Type.Arr d d') -> unify $ (c, d) : (c', d') : rest
 
 -- | Try to infer the type of the given term.
 --
 -- The return value is the typed AST, with the subsitution returned by 'unify'
 -- already applied.
-infer :: Context -> Term -> Maybe Node
+infer :: Context -> Untyped.Term -> Maybe Typed.Term
 infer g t = do
     s <- unify cs
     pure $ sub s n

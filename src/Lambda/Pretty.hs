@@ -1,12 +1,9 @@
-module Lambda.Pretty
-    ( Pretty (..)
-    )
-    where
+module Lambda.Pretty where
 
-import qualified Text.PrettyPrint.HughesPJ as PP
+import Text.PrettyPrint.HughesPJ (Doc)
 
 class Pretty a where
-    ppr :: Int -> a -> PP.Doc
+    ppr :: Int -> a -> Doc
 
-    pp :: a -> PP.Doc
+    pp :: a -> Doc
     pp = ppr 0

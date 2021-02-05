@@ -1,8 +1,4 @@
-module Lambda.Term
-    ( Term (..)
-    , eval
-    )
-    where
+module Lambda.Untyped where
 
 data Term = Var Int | Abs Term | App Term Term
     deriving (Eq, Read, Show)
