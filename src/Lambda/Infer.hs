@@ -80,9 +80,10 @@ unify ((a, b) : rest) = if a == b
     else case (a, b) of
         (Type.Var m, _)
             | m `Set.member` free b    -> Nothing
-            | otherwise                ->
+            | otherwise                -> do
                 let s = Map.singleton m b
-                in fmap (`after` s) (unify (fmap (transform s) rest))
+                s' <- unify (fmap (transform s) rest)
+                Just (s' `after` s)
         (_, Type.Var _)                -> unify ((b, a) : rest)
         (Type.Arr c c', Type.Arr d d') -> unify ((c, d) : (c', d') : rest)
 
