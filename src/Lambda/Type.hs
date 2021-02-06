@@ -2,25 +2,14 @@ module Lambda.Type where
 
 import Data.Map (Map)
 import Data.Set (Set)
-import qualified Data.Map                  as Map
-import qualified Data.Set                  as Set
-import qualified Text.PrettyPrint.HughesPJ as PrettyPrint
-
-import Lambda.Pretty
+import qualified Data.Map as Map
+import qualified Data.Set as Set
 
 -- | A type is either a type variable or a function type.
 --
 -- There is an infinite number of type variables, indexed by the integers.
 data Type = Var Int | Arr Type Type
     deriving (Eq, Read, Show)
-
-instance Pretty Type where
-    ppr _ (Var n)    = PrettyPrint.text $ "a" <> show n
-    ppr d (Arr a a') = PrettyPrint.maybeParens (d > 0) . PrettyPrint.hsep $
-        [ ppr (d + 1) a
-        , PrettyPrint.text "->"
-        , ppr (d + 1) a'
-        ]
 
 -- | Map a type to the set of its type variables.
 free :: Type -> Set Int

@@ -3,9 +3,9 @@ module Lambda.Infer where
 import Control.Monad.Trans.State (State)
 import Lens.Micro                (Lens')
 import Lens.Micro.Mtl            ((+=), modifying, use, view)
+import qualified Control.Monad.Trans.State as State
 import qualified Data.Map                  as Map
 import qualified Data.Set                  as Set
-import qualified Control.Monad.Trans.State as State
 
 import Lambda.Type
 import Lambda.Typed
