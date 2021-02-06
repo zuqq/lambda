@@ -69,7 +69,7 @@ runGather :: Context -> Untyped.Term -> (Typed.Term, [Constraint])
 runGather c t = (a, view collected s')
   where
     bound   = foldr (Set.union . free) Set.empty c
-    next    = if Set.null bound then 0 else Set.findMax bound + 1
+    next    = maybe 0 (+ 1) (Set.lookupMax bound)
     (a, s') = State.runState (gather c t) (GatherState next [])
 
 -- | Try to find a substitution that solves the given constraints.
