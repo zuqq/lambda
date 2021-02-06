@@ -1,17 +1,17 @@
 module Lambda.Infer where
 
 import Control.Monad.Trans.State (State)
+import Lambda.Type
+import Lambda.Typed
 import Lens.Micro                (Lens')
 import Lens.Micro.Mtl            ((+=), modifying, use, view)
+
 import qualified Control.Monad.Trans.State as State
 import qualified Data.Map                  as Map
 import qualified Data.Set                  as Set
-
-import Lambda.Type
-import Lambda.Typed
-import qualified Lambda.Type    as Type    (Type (..))
-import qualified Lambda.Typed   as Typed   (Term (..))
-import qualified Lambda.Untyped as Untyped (Term (..))
+import qualified Lambda.Type               as Type    (Type (..))
+import qualified Lambda.Typed              as Typed   (Term (..))
+import qualified Lambda.Untyped            as Untyped (Term (..))
 
 -- | A constraint is an equality between two types.
 type Constraint = (Type, Type)

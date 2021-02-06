@@ -2,11 +2,11 @@
 
 module Lambda.Pretty (pretty) where
 
-import Data.Text (Text)
-import Prelude   hiding (abs)
-import qualified Data.Text as Text (pack)
-
+import Data.Text      (Text)
 import Lambda.Untyped
+import Prelude        hiding (abs)
+
+import qualified Data.Text as Text (pack)
 
 -- $setup
 -- >>> :set -XOverloadedStrings

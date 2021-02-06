@@ -4,8 +4,8 @@ data Term = Var Int | Abs Term | App Term Term
     deriving (Eq, Read, Show)
 
 shift
-    :: Int   -- ^ Amount
-    -> Int   -- ^ Cutoff
+    :: Int   -- ^ Amount.
+    -> Int   -- ^ Cutoff.
     -> Term
     -> Term
 shift i c (Var n)
@@ -16,9 +16,9 @@ shift i c (App t t') = App (shift i c t) (shift i c t')
 
 -- | @sub t m t'@ is @t'@ with all occurences of @Var m@ replaced by @t@.
 sub
-    :: Term  -- ^ Term to replace with
-    -> Int   -- ^ Index of the variable to replace
-    -> Term  -- ^ Object
+    :: Term  -- ^ Replacement.
+    -> Int   -- ^ Index of the variable to replace.
+    -> Term
     -> Term
 sub t m (Var n)
     | m == n         = t

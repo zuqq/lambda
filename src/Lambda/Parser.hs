@@ -4,10 +4,10 @@ module Lambda.Parser (parse) where
 
 import Control.Applicative ((<|>))
 import Data.Text           (Text)
-import Prelude             hiding (abs)
-import qualified Data.Attoparsec.Text as Attoparsec
-
 import Lambda.Untyped
+import Prelude             hiding (abs)
+
+import qualified Data.Attoparsec.Text as Attoparsec
 
 -- $setup
 -- >>> :set -XOverloadedStrings

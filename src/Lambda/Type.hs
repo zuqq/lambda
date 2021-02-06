@@ -1,11 +1,25 @@
-module Lambda.Type where
+module Lambda.Type
+    (
+    -- * Type
+      Type (..)
+    , free
+    -- * Context
+    , Context
+    , bind
+    -- * Sub
+    , Sub
+    , after
+    , apply
+    )
+    where
 
 import Data.Map (Map)
 import Data.Set (Set)
+
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
--- | A type is either a type variable or a function type.
+-- | A type is either a type variable or an arrow type.
 --
 -- There is an infinite number of type variables, indexed by the integers.
 data Type = Var Int | Arr Type Type
@@ -37,7 +51,9 @@ apply s (Arr a b) = Arr (apply s a) (apply s b)
 -- | Compose two substitutions.
 --
 -- The substitution @s' `after` s@ satisfies
+--
 -- > apply (s' `after` s) a = s' `apply` (s `apply` a)
+--
 -- for every @a@.
 after :: Sub -> Sub -> Sub
 after s' s = Map.union (Map.map (apply s') s) s'
