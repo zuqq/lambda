@@ -7,11 +7,13 @@ extra-source-files:
 - README.md
 
 dependencies:
+- attoparsec
 - base >= 4.7 && < 5
 - containers
 - microlens
 - microlens-mtl
 - pretty
+- text
 - transformers
 
 library:
@@ -22,3 +24,17 @@ library:
   - -Wincomplete-record-updates
   - -Wincomplete-uni-patterns
   - -Wredundant-constraints
+
+tests:
+  graze-doctest:
+    main: Main.hs
+    source-dirs: doctest
+    dependencies:
+    - doctest
+    - lambda
+  graze-prop:
+    main: Main.hs
+    source-dirs: prop
+    dependencies:
+    - QuickCheck
+    - lambda
