@@ -1,33 +1,29 @@
-module Lambda.Untyped where
+module Lambda.Untyped (Term (..), eval) where
 
-data Term = Var Int | Abs Term | App Term Term
+data Term
+    = Var Integer
+    | Abs Term
+    | App Term Term
     deriving (Eq, Read, Show)
 
-shift
-    :: Int   -- ^ Amount.
-    -> Int   -- ^ Cutoff.
-    -> Term
-    -> Term
+-- | @shift i c@ adds @i@ to all variable indices greater than or equal to @c@.
+shift :: Integer -> Integer -> Term -> Term
 shift i c (Var n)
     | n >= c         = Var (n + i)
     | otherwise      = Var n
 shift i c (Abs t)    = Abs (shift i (c + 1) t)
 shift i c (App t t') = App (shift i c t) (shift i c t')
 
--- | @sub t m t'@ is @t'@ with all occurences of @Var m@ replaced by @t@.
-sub
-    :: Term  -- ^ Replacement.
-    -> Int   -- ^ Index of the variable to replace.
-    -> Term
-    -> Term
-sub t m (Var n)
-    | m == n         = t
-    | otherwise      = Var n
-sub t m (Abs t')     = Abs (sub (shift 1 0 t) (m + 1) t')
-sub t m (App t' t'') = App (sub t m t') (sub t m t'')
+-- | @subst t m@ replaces all occurences of @Var m@ by @t@.
+subst :: Term -> Integer -> Term -> Term
+subst t m (Var n)
+    | m == n           = t
+    | otherwise        = Var n
+subst t m (Abs t')     = Abs (subst (shift 1 0 t) (m + 1) t')
+subst t m (App t' t'') = App (subst t m t') (subst t m t'')
 
 beta :: Term -> Term -> Term
-beta t t' = shift (-1) 0 (sub (shift 1 0 t') 0 t)
+beta t t' = shift (-1) 0 (subst (shift 1 0 t') 0 t)
 
 -- | Evaluate a 'Term', using a call-by-value strategy.
 eval :: Term -> Term

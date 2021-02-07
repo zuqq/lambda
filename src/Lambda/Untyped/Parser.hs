@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lambda.Parser (parse) where
+module Lambda.Untyped.Parser (parse) where
 
 import Control.Applicative ((<|>))
 import Data.Text           (Text)

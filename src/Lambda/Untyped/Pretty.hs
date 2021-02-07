@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lambda.Pretty (pretty) where
+module Lambda.Untyped.Pretty (pretty) where
 
 import Data.Text      (Text)
 import Lambda.Untyped

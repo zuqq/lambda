@@ -1,9 +1,10 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+import Lambda.Untyped
+import Lambda.Untyped.Parser
+import Lambda.Untyped.Pretty
 import Test.QuickCheck
 import Test.QuickCheck.Modifiers
-
-import Lambda
 
 instance Arbitrary Term where
     arbitrary = sized go0
