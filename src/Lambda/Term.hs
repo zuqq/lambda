@@ -1,4 +1,4 @@
-module Lambda.Untyped (Term (..), eval) where
+module Lambda.Term (Term (..), eval) where
 
 data Term
     = Var Integer
@@ -22,12 +22,16 @@ subst t m (Var n)
 subst t m (Abs t')     = Abs (subst (shift 1 0 t) (m + 1) t')
 subst t m (App t' t'') = App (subst t m t') (subst t m t'')
 
-beta :: Term -> Term -> Term
-beta t t' = shift (-1) 0 (subst (shift 1 0 t') 0 t)
-
--- | Evaluate a 'Term', using a call-by-value strategy.
+-- | Call-by-value evaluation.
+--
+-- ==== __Examples__
+--
+-- >>> eval (App (Abs (Var 0)) (App (Abs (Var 0)) (Abs (App (Abs (Var 0)) (Var 0)))))
+-- Abs (App (Abs (Var 0)) (Var 0))
 eval :: Term -> Term
-eval (App (Abs t) (Abs t')) = beta t (Abs t')        -- (E-AppAbs)
-eval (App (Abs t) t')       = App (Abs t) (eval t')  -- (E-App2)
-eval (App t t')             = App (eval t) t'        -- (E-App1)
-eval t                      = t
+eval t@(Var _)            = t
+eval t@(Abs _)            = t
+eval (App t t'@(App _ _)) = eval (App t (eval t'))
+eval t@(App (Var _) _)    = t
+eval (App (Abs t) t')     = eval (shift (-1) 0 (subst (shift 1 0 t') 0 t))
+eval (App t@(App _ _) t') = eval (App (eval t) t')

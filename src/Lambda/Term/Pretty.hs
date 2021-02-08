@@ -1,12 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lambda.Untyped.Pretty (pretty) where
+module Lambda.Term.Pretty (pretty) where
 
-import Data.Text      (Text)
-import Lambda.Untyped
-import Prelude        hiding (abs)
+import Data.Text (Text)
+import Prelude hiding (abs)
 
 import qualified Data.Text as Text (pack)
+
+import Lambda.Term
 
 -- $setup
 -- >>> :set -XOverloadedStrings

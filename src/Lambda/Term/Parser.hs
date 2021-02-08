@@ -1,13 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lambda.Untyped.Parser (parse) where
+module Lambda.Term.Parser (parse) where
 
 import Control.Applicative ((<|>))
-import Data.Text           (Text)
-import Lambda.Untyped
-import Prelude             hiding (abs)
+import Data.Text (Text)
+import Prelude hiding (abs)
 
 import qualified Data.Attoparsec.Text as Attoparsec
+
+import Lambda.Term
 
 -- $setup
 -- >>> :set -XOverloadedStrings
