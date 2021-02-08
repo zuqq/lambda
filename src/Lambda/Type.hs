@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Lambda.Type (Type (..), infer) where
 
 import Control.Monad.Trans.State (State)
@@ -21,8 +19,8 @@ data Type
 
 -- | Map a type to the set of its type variables.
 free :: Type -> Set Integer
-free (TypeVar n)  = Set.singleton n
-free (a :-> a')   = Set.union (free a) (free a')
+free (TypeVar n) = Set.singleton n
+free (a :-> a')  = Set.union (free a) (free a')
 
 -- | A typing context is a finite mapping from free variables to types.
 type Context = Map Integer Type
@@ -38,17 +36,15 @@ bind a = Map.insert 0 a . Map.mapKeys (+ 1)
 type Substitution = Map Integer Type
 
 -- | Apply a substitution to a type.
+--
+-- NB. @apply@ is a monoid homomorphism:
+--
+-- > \s s' a -> apply (s' `after` s) a == apply s' (apply s a)
 apply :: Substitution -> Type -> Type
 apply s (TypeVar n) = Map.findWithDefault (TypeVar n) n s
 apply s (a :-> a')  = apply s a :-> apply s a'
 
 -- | Compose two substitutions.
---
--- The substitution @s' `after` s@ satisfies
---
--- > apply (s' `after` s) a = s' `apply` (s `apply` a)
---
--- for every @a@.
 after :: Substitution -> Substitution -> Substitution
 after s' s = Map.union (Map.map (apply s') s) s'
 
