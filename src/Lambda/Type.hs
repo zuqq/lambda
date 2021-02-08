@@ -97,12 +97,6 @@ gather ctx (App t t') = do
     record (a, a' :-> b)
     pure b
 
-runGather :: Context -> Term -> (Type, [Constraint])
-runGather ctx t = (a, cs)
-  where
-    i = maybe 0 (+ 1) (Set.lookupMax (foldMap free ctx))
-    (a, GatherState _ cs) = State.runState (gather ctx t) (GatherState i [])
-
 -- | Try to find a substitution that solves the given constraints.
 unify :: [Constraint] -> Maybe Substitution
 unify []                          = Just Map.empty
@@ -120,6 +114,7 @@ unify ((a :-> a', b :-> b') : cs) = unify ((a, b) : (a', b') : cs)
 -- | Try to infer the type of the given term.
 infer :: Context -> Term -> Maybe Type
 infer ctx t = do
-    let (a, cs) = runGather ctx t
+    let i = maybe 0 (+ 1) (Set.lookupMax (foldMap free ctx))
+    let (a, GatherState _ cs) = State.runState (gather ctx t) (GatherState i [])
     s <- unify cs
     pure (apply s a)
