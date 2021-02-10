@@ -3,7 +3,7 @@ module Lambda.Type.Internal where
 import Control.Monad.Trans.State (State)
 import Data.Foldable (foldl')
 import Data.Map.Strict (Map)
-import Data.Sequence ((><), Seq)
+import Data.Sequence (Seq)
 import Data.Set (Set)
 import Lens.Micro (Lens')
 import Lens.Micro.Mtl ((+=), modifying, use)
@@ -26,10 +26,10 @@ normalize b = apply (process (inorder b)) b
   where
     inorder :: Type -> Seq Integer
     inorder (TypeVar n) = Seq.singleton n
-    inorder (a :-> a')  = inorder a >< inorder a'
+    inorder (a :-> a')  = inorder a <> inorder a'
 
     process :: Seq Integer -> Substitution
-    process = snd . foldl' step (0, Map.empty)
+    process = snd . foldl' step (0, mempty)
       where
         step :: (Integer, Substitution) -> Integer -> (Integer, Substitution)
         step z@(i, m) x
@@ -40,7 +40,7 @@ normalize b = apply (process (inorder b)) b
 -- | Map a type to the set of its type variables.
 free :: Type -> Set Integer
 free (TypeVar n) = Set.singleton n
-free (a :-> a')  = Set.union (free a) (free a')
+free (a :-> a')  = free a <> free a'
 
 -- | A typing context is a finite mapping from free variables to types.
 type Context = Map Integer Type
@@ -62,7 +62,7 @@ apply s (a :-> a')  = apply s a :-> apply s a'
 
 -- | Compose two substitutions.
 after :: Substitution -> Substitution -> Substitution
-after s' s = Map.union (Map.map (apply s') s) s'
+after s' s = Map.map (apply s') s <> s'
 
 -- | A constraint is an equality between two types.
 type Constraint = (Type, Type)
@@ -111,7 +111,7 @@ gather ctx (App t t') = do
 
 -- | Try to find a substitution that solves the given constraints.
 unify :: [Constraint] -> Maybe Substitution
-unify []                          = Just Map.empty
+unify []                          = Just mempty
 unify ((a, b) : cs)
     | a == b                      = unify cs
 unify ((TypeVar n, b) : cs)
