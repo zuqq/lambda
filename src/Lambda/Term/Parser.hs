@@ -8,21 +8,9 @@ import Prelude hiding (abs)
 
 import qualified Data.Attoparsec.Text as Attoparsec
 
-import Lambda.Term
-
--- $setup
--- >>> :set -XOverloadedStrings
+import Lambda.Term.Internal
 
 -- | Parse a 'Term'.
---
--- ==== __Examples__
---
--- >>> parse "0"
--- Right (Var 0)
--- >>> parse "0 1"
--- Right (App (Var 0) (Var 1))
--- >>> parse "\\ \\ 0 1"
--- Right (Abs (Abs (App (Var 0) (Var 1))))
 parse :: Text -> Either String Term
 parse = Attoparsec.parseOnly abs
 

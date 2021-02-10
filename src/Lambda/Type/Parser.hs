@@ -8,21 +8,9 @@ import Prelude hiding (abs)
 
 import qualified Data.Attoparsec.Text as Attoparsec
 
-import Lambda.Type
-
--- $setup
--- >>> :set -XOverloadedStrings
+import Lambda.Type.Internal
 
 -- | Parse a 'Type'.
---
--- ==== __Examples__
---
--- >>> parse "0"
--- Right (TypeVar 0)
--- >>> parse "0 -> 1"
--- Right (TypeVar 0 :-> TypeVar 1)
--- >>> parse "0 -> (1 -> 1)"
--- Right (TypeVar 0 :-> (TypeVar 1 :-> TypeVar 1))
 parse :: Text -> Either String Type
 parse = Attoparsec.parseOnly arr
 

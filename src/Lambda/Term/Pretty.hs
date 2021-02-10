@@ -7,21 +7,9 @@ import Prelude hiding (abs)
 
 import qualified Data.Text as Text (pack)
 
-import Lambda.Term
+import Lambda.Term.Internal
 
--- $setup
--- >>> :set -XOverloadedStrings
-
--- | Pretty print a 'Term'.
---
--- ==== __Examples__
---
--- >>> pretty (Var 0)
--- "0"
--- >>> pretty (App (Var 0) (Var 1))
--- "0 1"
--- >>> pretty (Abs (Abs (App (Var 0) (Var 1))))
--- "\\ \\ 0 1"
+-- | Print a 'Term'.
 pretty :: Term -> Text
 pretty = abs
 

@@ -26,15 +26,12 @@ library:
   - -Wredundant-constraints
 
 tests:
-  graze-doctest:
-    main: Main.hs
-    source-dirs: doctest
-    dependencies:
-    - doctest
-    - lambda
-  graze-prop:
-    main: Main.hs
-    source-dirs: prop
+  graze-test:
+    main: Spec.hs
+    source-dirs: test
     dependencies:
     - QuickCheck
+    - doctest
+    - hspec
     - lambda
+    - quickcheck-instances

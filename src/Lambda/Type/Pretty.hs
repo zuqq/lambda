@@ -7,21 +7,9 @@ import Prelude hiding (abs)
 
 import qualified Data.Text as Text (pack)
 
-import Lambda.Type
+import Lambda.Type.Internal
 
--- $setup
--- >>> :set -XOverloadedStrings
-
--- | Pretty print a 'Term'.
---
--- ==== __Examples__
---
--- >>> pretty (TypeVar 0)
--- "0"
--- >>> pretty (TypeVar 0 :-> TypeVar 1)
--- "0 -> 1"
--- >>> pretty (TypeVar 0 :-> (TypeVar 1 :-> TypeVar 1))
--- "0 -> (1 -> 1)"
+-- | Print a 'Term'.
 pretty :: Type -> Text
 pretty = arr
 

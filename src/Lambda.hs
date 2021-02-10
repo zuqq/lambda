@@ -1,16 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lambda (infer, parse, pretty) where
+module Lambda (Type.infer, Term.parse, pretty) where
 
 import Data.Text (Text)
 
-import Lambda.Term
-import Lambda.Term.Parser
-import Lambda.Type
+import Lambda.Term (Term)
+import Lambda.Type (Type)
 
-import qualified Lambda.Term.Pretty as Term
-import qualified Lambda.Type.Pretty as Type
+import qualified Lambda.Term as Term
+import qualified Lambda.Type as Type
 
--- | Pretty print a typed term.
+-- | Print a typed term.
 pretty :: (Term, Type) -> Text
 pretty (t, a) = Term.pretty t <> " : " <> Type.pretty a
