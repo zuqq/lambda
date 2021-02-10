@@ -10,7 +10,7 @@ import qualified Data.Attoparsec.Text as Attoparsec
 
 import Lambda.Type.Internal
 
--- | Parse a 'Type'.
+-- | Parse a type.
 parse :: Text -> Either String Type
 parse = Attoparsec.parseOnly arr
 

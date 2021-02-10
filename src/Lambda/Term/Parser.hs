@@ -10,7 +10,7 @@ import qualified Data.Attoparsec.Text as Attoparsec
 
 import Lambda.Term.Internal
 
--- | Parse a 'Term'.
+-- | Parse a term.
 parse :: Text -> Either String Term
 parse = Attoparsec.parseOnly abs
 

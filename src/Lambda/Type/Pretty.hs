@@ -9,7 +9,7 @@ import qualified Data.Text as Text (pack)
 
 import Lambda.Type.Internal
 
--- | Print a 'Term'.
+-- | Print a type.
 pretty :: Type -> Text
 pretty = arr
 

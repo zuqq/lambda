@@ -42,14 +42,11 @@ free :: Type -> Set Integer
 free (TypeVar n) = Set.singleton n
 free (a :-> a')  = free a <> free a'
 
--- | A typing context is a finite mapping from free variables to types.
+-- | A typing context is a finite mapping from type variable indices to types.
 type Context = Map Integer Type
 
 -- | Adjust the context when going under an abstraction.
-bind
-    :: Type     -- ^ Type for the bound variable of the abstraction.
-    -> Context  -- ^ Context for the abstraction.
-    -> Context  -- ^ Context for the body of the abstraction.
+bind :: Type -> Context -> Context
 bind a = Map.insert 0 a . Map.mapKeys (+ 1)
 
 -- | A substitution is a finite mapping from type variable indices to types.
@@ -95,7 +92,7 @@ fresh = do
 record :: Constraint -> Gather ()
 record c = modifying collected (c :)
 
--- | Gather the type constraints for the given term.
+-- | Gather the constraints for the given term.
 gather :: Context -> Term -> Gather Type
 gather ctx (Var n)    = maybe fresh pure (Map.lookup n ctx)
 gather ctx (Abs t)    = do

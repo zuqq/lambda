@@ -9,7 +9,7 @@ import qualified Data.Text as Text (pack)
 
 import Lambda.Term.Internal
 
--- | Print a 'Term'.
+-- | Print a term.
 pretty :: Term -> Text
 pretty = abs
 
