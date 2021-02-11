@@ -93,4 +93,5 @@ infer ctx t = do
     s <- unify (e [])
     pure (apply s a)
   where
-    i = maybe 0 (+ 1) (Set.lookupMax (foldMap free ctx))
+    -- Skip all variables that appear on either side of a binding.
+    i = maybe 0 (+ 1) (Set.lookupMax (Map.keysSet ctx <> foldMap free ctx))
