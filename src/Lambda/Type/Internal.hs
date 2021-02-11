@@ -1,14 +1,13 @@
 module Lambda.Type.Internal where
 
-import Control.Monad.Trans.State (State)
+import Control.Monad.Trans.RWS.Strict (RWS)
 import Data.Foldable (foldl')
 import Data.Map.Strict (Map)
+import Data.Monoid (Endo (..))
 import Data.Sequence (Seq)
 import Data.Set (Set)
-import Lens.Micro (Lens')
-import Lens.Micro.Mtl ((+=), modifying, use)
 
-import qualified Control.Monad.Trans.State as State
+import qualified Control.Monad.Trans.RWS.Strict as RWS
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
@@ -68,42 +67,29 @@ type Constraint = (Type, Type)
 transform :: Substitution -> Constraint -> Constraint
 transform s (a, b) = (apply s a, apply s b)
 
-data GatherState
-    = GatherState
-        Integer       -- ^ Index of the next fresh type variable.
-        [Constraint]  -- ^ List of collected constraints.
-
-index :: Lens' GatherState Integer
-index p (GatherState i cs) = fmap (`GatherState` cs) (p i)
-
-collected :: Lens' GatherState [Constraint]
-collected q (GatherState i cs) = fmap (i `GatherState`) (q cs)
-
-type Gather a = State GatherState a
+type Gather = RWS Context (Endo [Constraint]) Integer
 
 -- | Get a fresh type variable.
 fresh :: Gather Type
 fresh = do
-    i <- use index
-    index += 1
+    i <- RWS.get
+    RWS.put (i + 1)
     pure (TypeVar i)
 
--- | Record a constraint.
-record :: Constraint -> Gather ()
-record c = modifying collected (c :)
-
 -- | Gather the constraints for the given term.
-gather :: Context -> Term -> Gather Type
-gather ctx (Var n)    = maybe fresh pure (Map.lookup n ctx)
-gather ctx (Abs t)    = do
+gather :: Term -> Gather Type
+gather (Var n)    = do
+    a <- RWS.asks (Map.lookup n)
+    maybe fresh pure a
+gather (Abs t)    = do
     a  <- fresh
-    a' <- gather (bind a ctx) t
+    a' <- RWS.local (bind a) (gather t)
     pure (a :-> a')
-gather ctx (App t t') = do
-    a  <- gather ctx t
-    a' <- gather ctx t'
+gather (App t t') = do
+    a  <- gather t
+    a' <- gather t'
     b  <- fresh
-    record (a, a' :-> b)
+    RWS.tell (Endo ((a, a' :-> b) :))
     pure b
 
 -- | Try to find a substitution that solves the given constraints.
@@ -123,8 +109,8 @@ unify ((a :-> a', b :-> b') : cs) = unify ((a, b) : (a', b') : cs)
 -- | Try to infer the type of the given term.
 infer :: Context -> Term -> Maybe Type
 infer ctx t = do
-    let (a, GatherState _ cs) = State.runState (gather ctx t) (GatherState i [])
-    s <- unify cs
+    let (a, Endo e) = RWS.evalRWS (gather t) ctx i
+    s <- unify (e [])
     pure (normalize (apply s a))
   where
     i = maybe 0 (+ 1) (Set.lookupMax (foldMap free ctx))
