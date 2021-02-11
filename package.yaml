@@ -28,7 +28,6 @@ tests:
     source-dirs: test
     dependencies:
     - QuickCheck
-    - doctest
     - hspec
     - lambda
     - quickcheck-instances
