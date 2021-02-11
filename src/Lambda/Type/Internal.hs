@@ -1,15 +1,12 @@
 module Lambda.Type.Internal where
 
 import Control.Monad.Trans.RWS.Strict (RWS)
-import Data.Foldable (foldl')
 import Data.Map.Strict (Map)
 import Data.Monoid (Endo (..))
-import Data.Sequence (Seq)
 import Data.Set (Set)
 
 import qualified Control.Monad.Trans.RWS.Strict as RWS
 import qualified Data.Map.Strict as Map
-import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 
 import Lambda.Term
@@ -18,23 +15,6 @@ data Type
     = TypeVar Integer
     | Type :-> Type
     deriving (Eq, Read, Show)
-
--- | Normalize a type by relabeling its variables in order.
-normalize :: Type -> Type
-normalize b = apply (process (inorder b)) b
-  where
-    inorder :: Type -> Seq Integer
-    inorder (TypeVar n) = Seq.singleton n
-    inorder (a :-> a')  = inorder a <> inorder a'
-
-    process :: Seq Integer -> Substitution
-    process = snd . foldl' step (0, mempty)
-      where
-        step :: (Integer, Substitution) -> Integer -> (Integer, Substitution)
-        step z@(i, m) x
-            | x `Map.member` m = z
-            | otherwise        =
-                i `seq` m `seq` (i + 1, Map.insert x (TypeVar i) m)
 
 -- | Map a type to the set of its type variables.
 free :: Type -> Set Integer
@@ -111,6 +91,6 @@ infer :: Context -> Term -> Maybe Type
 infer ctx t = do
     let (a, Endo e) = RWS.evalRWS (gather t) ctx i
     s <- unify (e [])
-    pure (normalize (apply s a))
+    pure (apply s a)
   where
     i = maybe 0 (+ 1) (Set.lookupMax (foldMap free ctx))

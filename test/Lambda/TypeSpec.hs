@@ -39,16 +39,6 @@ spec = do
         it "is a monoid homomorphism" do
             property \a -> apply mempty a `shouldBe` id a
 
-    describe "normalize" do
-        it "is idempotent" do
-            property \a -> (normalize . normalize) a `shouldBe` normalize a
-
-    describe "infer" do
-        it "infers the type of a variable" do
-            infer mempty (Var 0) `shouldBe` Just (TypeVar 0)
-        it "infers the type of the identity function" do
-            infer mempty (Abs (Var 0)) `shouldBe` Just (TypeVar 0 :-> TypeVar 0)
-
     describe "parse" do
         it "parses `TypeVar`" do
             parse "0" `shouldBe` Right (TypeVar 0)
