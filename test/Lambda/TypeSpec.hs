@@ -46,7 +46,7 @@ spec = do
             parse "0 -> 1" `shouldBe` Right (TypeVar 0 :-> TypeVar 1)
         it "parses nested `:->`" do
             parse "0 -> (1 -> 1)"
-              `shouldBe` Right (TypeVar 0 :-> (TypeVar 1 :-> TypeVar 1))
+                `shouldBe` Right (TypeVar 0 :-> (TypeVar 1 :-> TypeVar 1))
         it "is a left inverse of `pretty`" do
             property \a -> (parse . pretty) a `shouldBe` Right a
 
@@ -57,4 +57,4 @@ spec = do
             pretty (TypeVar 0 :-> TypeVar 1) `shouldBe` "0 -> 1"
         it "prints nested `:->`" do
             pretty (TypeVar 0 :-> (TypeVar 1 :-> TypeVar 1))
-              `shouldBe` "0 -> (1 -> 1)"
+                `shouldBe` "0 -> (1 -> 1)"
