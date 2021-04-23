@@ -35,9 +35,9 @@ spec = do
     describe "apply" do
         it "is a semigroup homomorphism" do
             property \s s' a ->
-                apply (s' `after` s) a `shouldBe` (apply s' . apply s) a
+                apply (s' `after` s) a == (apply s' . apply s) a
         it "is a monoid homomorphism" do
-            property \a -> apply mempty a `shouldBe` id a
+            property \a -> apply mempty a == id a
 
     describe "parse" do
         it "parses `TypeVar`" do
@@ -48,7 +48,7 @@ spec = do
             parse "0 -> (1 -> 1)"
                 `shouldBe` Right (TypeVar 0 :-> (TypeVar 1 :-> TypeVar 1))
         it "is a left inverse of `pretty`" do
-            property \a -> (parse . pretty) a `shouldBe` Right a
+            property \a -> (parse . pretty) a == Right a
 
     describe "pretty" do
         it "prints `TypeVar`" do

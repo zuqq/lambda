@@ -49,7 +49,7 @@ spec = do
         it "parses `Abs`" do
             parse "\\ \\ 0 1" `shouldBe` Right (Abs (Abs (App (Var 0) (Var 1))))
         it "is a left inverse of `pretty`" do
-            property \t -> (parse . pretty) t `shouldBe` Right t
+            property \t -> (parse . pretty) t == Right t
 
     describe "pretty" do
         it "prints `Var`" do
