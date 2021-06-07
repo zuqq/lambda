@@ -1,12 +1,15 @@
 module Lambda.Type.Internal where
 
 import Control.Monad.Trans.RWS.Strict (RWS)
+import Data.Containers.ListUtils (nubOrd)
+import Data.Foldable (toList)
 import Data.Map.Strict (Map)
 import Data.Monoid (Endo (..))
 import Data.Set (Set)
 
 import qualified Control.Monad.Trans.RWS.Strict as RWS
 import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 
 import Lambda.Term
@@ -21,12 +24,25 @@ free :: Type -> Set Integer
 free (TypeVar n) = Set.singleton n
 free (a :-> a')  = free a <> free a'
 
--- | A typing context is a finite mapping from type variable indices to types.
+-- | Left-to-right iteration of the type variables, with duplicates removed.
+inorder :: Type -> [Integer]
+inorder = nubOrd . toList . go
+  where
+    go (TypeVar n) = Seq.singleton n
+    go (a :-> a')  = go a <> go a'
+
+-- | A typing context is a finite mapping from variable indices to types.
 type Context = Map Integer Type
 
 -- | Adjust the context when going under an abstraction.
 bind :: Type -> Context -> Context
 bind a = Map.insert 0 a . Map.mapKeys (+ 1)
+
+-- | Relabel the type variables from left to right.
+normalize :: Type -> Type
+normalize a = apply s a
+  where
+    s = Map.fromList [(n, TypeVar i) | (n, i) <- zip (inorder a) [0..]]
 
 -- | A substitution is a finite mapping from type variable indices to types.
 type Substitution = Map Integer Type
@@ -87,11 +103,8 @@ unify ((a, b@(TypeVar _)) : cs)   = unify ((b, a) : cs)
 unify ((a :-> a', b :-> b') : cs) = unify ((a, b) : (a', b') : cs)
 
 -- | Try to infer the type of the given term.
-infer :: Context -> Term -> Maybe Type
-infer ctx t = do
-    let (a, Endo e) = RWS.evalRWS (gather t) ctx i
+infer :: Term -> Maybe Type
+infer t = do
+    let (a, Endo e) = RWS.evalRWS (gather t) mempty 0
     s <- unify (e [])
     pure (apply s a)
-  where
-    -- Skip all variables that appear on either side of a binding.
-    i = maybe 0 (+ 1) (Set.lookupMax (Map.keysSet ctx <> foldMap free ctx))

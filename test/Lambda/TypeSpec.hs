@@ -32,12 +32,25 @@ instance Arbitrary Type where
 
 spec :: Spec
 spec = do
+    describe "normalize" do
+        it "relabels the type variables from left to right" do
+            property \a ->
+                inorder (normalize a) == [i | (i, _) <- zip [0..] (inorder a)]
+        it "is idempotent" do
+            property \a -> (normalize . normalize) a `shouldBe` normalize a
+
     describe "apply" do
         it "is a semigroup homomorphism" do
             property \s s' a ->
                 apply (s' `after` s) a == (apply s' . apply s) a
         it "is a monoid homomorphism" do
             property \a -> apply mempty a == id a
+
+    describe "infer" do
+        it "infers the type of a variable" do
+            infer (Var 0) `shouldBe` Just (TypeVar 0)
+        it "infers the type of the identity function" do
+            infer (Abs (Var 0)) `shouldBe` Just (TypeVar 0 :-> TypeVar 0)
 
     describe "parse" do
         it "parses `TypeVar`" do
