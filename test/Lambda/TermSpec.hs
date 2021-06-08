@@ -33,6 +33,10 @@ instance Arbitrary Term where
             t' <- go0 (k `div` 2)
             pure (App t t')
 
+    shrink (Var _)    = mempty
+    shrink (Abs t)    = t : [Abs u | u <- shrink t]
+    shrink (App t t') = [t, t'] <> [App u u' | (u, u') <- shrink (t, t')]
+
 spec :: Spec
 spec = do
     describe "eval" do

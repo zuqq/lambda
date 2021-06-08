@@ -30,6 +30,9 @@ instance Arbitrary Type where
             a' <- go0 (k `div` 2)
             pure (a :-> a')
 
+    shrink (TypeVar _) = mempty
+    shrink (a :-> a')  = [a, a'] <> [b :-> b' | (b, b') <- shrink (a, a')]
+
 spec :: Spec
 spec = do
     describe "normalize" do
