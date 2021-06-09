@@ -54,6 +54,13 @@ spec = do
             infer (Var 0) `shouldBe` Just (TypeVar 0)
         it "infers the type of the identity function" do
             infer (Abs (Var 0)) `shouldBe` Just (TypeVar 0 :-> TypeVar 0)
+        it "rejects the Y combinator" do
+            let y =
+                    Abs
+                        (App
+                            (Abs (App (Var 1) (App (Var 0) (Var 0))))
+                            (Abs (App (Var 1) (App (Var 0) (Var 0)))))
+            infer y `shouldBe` Nothing
 
     describe "parse" do
         it "parses `TypeVar`" do

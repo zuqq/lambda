@@ -52,6 +52,13 @@ spec = do
             parse "0 1" `shouldBe` Right (App (Var 0) (Var 1))
         it "parses `Abs`" do
             parse "\\ \\ 0 1" `shouldBe` Right (Abs (Abs (App (Var 0) (Var 1))))
+        it "parses the Y combinator" do
+            let y =
+                    Abs
+                        (App
+                            (Abs (App (Var 1) (App (Var 0) (Var 0))))
+                            (Abs (App (Var 1) (App (Var 0) (Var 0)))))
+            parse "\\ (\\ 1 (0 0)) (\\ 1 (0 0))" `shouldBe` Right y
         it "is a left inverse of `pretty`" do
             property \t -> (parse . pretty) t == Right t
 
