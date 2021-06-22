@@ -106,5 +106,5 @@ unify ((a :-> a', b :-> b') : cs) = unify ((a, b) : (a', b') : cs)
 infer :: Term -> Maybe Type
 infer t = do
     let (a, Endo e) = RWS.evalRWS (gather t) mempty 0
-    s <- unify (e [])
+    s <- unify (e mempty)
     pure (apply s a)
