@@ -50,10 +50,31 @@ spec = do
             property \a -> apply mempty a == id a
 
     describe "infer" do
-        it "infers the type of a variable" do
-            infer (Var 0) `shouldBe` Just (TypeVar 0)
-        it "infers the type of the identity function" do
-            infer (Abs (Var 0)) `shouldBe` Just (TypeVar 0 :-> TypeVar 0)
+        let a = TypeVar 0
+            b = TypeVar 1
+            c = TypeVar 2
+
+        it "infers the type of id" do
+            infer (Abs (Var 0)) `shouldBe` Just (a :-> a)
+        it "infers the type of fst" do
+            infer (Abs (Abs (Var 1))) `shouldBe` Just (a :-> b :-> a)
+        it "infers the type of snd" do
+            infer (Abs (Abs (Var 0))) `shouldBe` Just (a :-> b :-> b)
+        it "infers the type of apply" do
+            infer (Abs (Abs (App (Var 1) (Var 0))))
+                `shouldBe` Just ((a :-> b) :-> a :-> b)
+        it "infers the type of twice" do
+            infer (Abs (Abs (App (Var 1) (App (Var 1) (Var 0)))))
+                `shouldBe` Just ((a :-> a) :-> a :-> a)
+        it "infers the type of thrice" do
+            infer (Abs (Abs (App (Var 1) (App (Var 1) (App (Var 1) (Var 0))))))
+                `shouldBe` Just ((a :-> a) :-> a :-> a)
+        it "infers the type of comp" do
+            infer (Abs (Abs (Abs (App (Var 2) (App (Var 1) (Var 0))))))
+                `shouldBe` Just ((a :-> b) :-> (c :-> a) :-> (c :-> b))
+
+        it "rejects sa" do
+            infer (Abs (App (Var 0) (Var 0))) `shouldBe` Nothing
         it "rejects the Y combinator" do
             let f = Var 1
                 x = Var 0
