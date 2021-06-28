@@ -14,6 +14,8 @@ import qualified Data.Set as Set
 
 import Lambda.Term
 
+infixr 0 :->
+
 data Type
     = TypeVar Integer
     | Type :-> Type
