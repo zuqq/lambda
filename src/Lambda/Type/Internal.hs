@@ -109,4 +109,4 @@ infer :: Term -> Maybe Type
 infer t = do
     let (a, e) = RWS.evalRWS (gather t) mempty 0
     s <- unify (appEndo e mempty)
-    pure (apply s a)
+    pure (normalize (apply s a))
