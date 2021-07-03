@@ -7,7 +7,6 @@ module Lambda.TypeSpec (spec) where
 
 import Test.Hspec (Spec, describe, it, shouldBe)
 import Test.QuickCheck
-import Test.QuickCheck.Instances.Containers ()
 
 import Lambda.Term (Term (..))
 import Lambda.Type.Internal
